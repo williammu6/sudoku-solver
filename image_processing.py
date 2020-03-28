@@ -62,8 +62,6 @@ def get_sudoku(image):
 
 image = cv2.imread('input.png')
 sudoku = get_sudoku(image)
-sudoku[3][8] = 3
-sudoku[4][5] = 3
 
 
 solver = Solver(sudoku)

@@ -20,9 +20,9 @@ class Solver():
         return True
 
     def find_empty(self):
-        for i in range(len(self.sudoku)):
-            for j in range(len(self.sudoku[0])):
-                if self.sudoku[i][j] == 0:
+        for x in range(len(self.sudoku)):
+            for y in range(len(self.sudoku[0])):
+                if self.sudoku[x][y] == 0:
                     return (i, j)
         return None
 
