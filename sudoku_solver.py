@@ -26,34 +26,20 @@ class Solver():
                     return (i, j)
         return None
 
-    # def solve(self):
-    #     coord = self.find_empty()
-    #     if coord is None:
-    #         return True
-    #     x, y = coord
-
-    #     for n in range(1, 10):
-    #         if self.is_valid(y, x, n):
-    #             self.sudoku[y][x] = n
-    #             if self.solve():
-    #                 return self.sudoku
-    #             self.sudoku[y][x] = 0
-    #     return False
-
     def solve(self):
-        find = self.find_empty()
-        if not find:
+        coord = self.find_empty()
+        if not coord:
             return True
-        else:
-            row, col = find
+
+        x, y = coord
 
         for i in range(1, 10):
-            if self.is_valid(row, col, i):
-                self.sudoku[row][col] = i
+            if self.is_valid(x, y, i):
+                self.sudoku[x][y] = i
 
                 if self.solve():
                     return True
 
-                self.sudoku[row][col] = 0
+                self.sudoku[x][y] = 0
 
         return False

@@ -1,13 +1,9 @@
 import cv2
 import numpy as np
 from imutils import contours
-from predictor import predict
-# import pytesseract
+from model import predict
 
 from sudoku_solver import Solver
-# from PIL import Image
-
-# model = get_model()
 
 grid_mapping = {}
 
@@ -64,7 +60,7 @@ def get_sudoku(image):
     return sudoku
 
 
-image = cv2.imread('sudoku.png')
+image = cv2.imread('input.png')
 sudoku = get_sudoku(image)
 sudoku[3][8] = 3
 sudoku[4][5] = 3

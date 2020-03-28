@@ -1,18 +1,15 @@
 import os
+import cv2
+import numpy as np
+
 from sklearn.externals import joblib
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-from skimage import data, color, exposure
-import scipy.ndimage
-import numpy as np
-import cv2
 from skimage.feature import hog
-import scipy.misc
 
-from generator import TRAINING_PATH
+from data_generator import TRAINING_PATH
 from constants import *
 
-MODEL = './models/knn_model.pkl'
+MODEL = './knn_model.pkl'
 
 
 def get_features(image):
