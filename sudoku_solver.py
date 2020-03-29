@@ -5,7 +5,6 @@ class Solver():
 
     def __init__(self, sudoku):
         self.sudoku = sudoku
-        self.stop = False
 
     def is_valid(self, y, x, n):
         if n in self.sudoku[:, x] or n in self.sudoku[y, :]:
@@ -23,7 +22,7 @@ class Solver():
         for x in range(len(self.sudoku)):
             for y in range(len(self.sudoku[0])):
                 if self.sudoku[x][y] == 0:
-                    return (i, j)
+                    return (x, y)
         return None
 
     def solve(self):
