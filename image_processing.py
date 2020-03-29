@@ -8,130 +8,57 @@ from sudoku_solver import Solver
 grid_mapping = {}
 
 
-def get_contour_precedence(contour, cols):
-    tolerance_factor = 10
-    origin = cv2.boundingRect(contour)
-    return ((origin[1] // tolerance_factor) * tolerance_factor) * cols + origin[0]
+BLOCK_SIZE = 50
+THRESHOLD = 25
 
 
 def get_grid(img):
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 90, 150, apertureSize=3)
-    kernel = np.ones((3, 3), np.uint8)
-    edges = cv2.dilate(edges, kernel, iterations=1)
-    kernel = np.ones((5, 5), np.uint8)
-    edges = cv2.erode(edges, kernel, iterations=1)
-
-    lines = cv2.HoughLines(edges, 1, np.pi/180, 150)
-
-    if lines is None:
-        return
-
-    if filter:
-        rho_threshold = 15
-        theta_threshold = 0.1
-
-        similar_lines = {i: [] for i in range(len(lines))}
-        for i in range(len(lines)):
-            for j in range(len(lines)):
-                if i == j:
-                    continue
-
-                rho_i, theta_i = lines[i][0]
-                rho_j, theta_j = lines[j][0]
-                if abs(rho_i - rho_j) < rho_threshold and abs(theta_i - theta_j) < theta_threshold:
-                    similar_lines[i].append(j)
-
-        indices = [i for i in range(len(lines))]
-        indices.sort(key=lambda x: len(similar_lines[x]))
-
-        line_flags = len(lines)*[True]
-        for i in range(len(lines) - 1):
-
-            if not line_flags[indices[i]]:
-                continue
-
-            for j in range(i + 1, len(lines)):
-
-                if not line_flags[indices[j]]:
-                    continue
-
-                rho_i, theta_i = lines[indices[i]][0]
-                rho_j, theta_j = lines[indices[j]][0]
-                if abs(rho_i - rho_j) < rho_threshold and abs(theta_i - theta_j) < theta_threshold:
-
-                    line_flags[indices[j]] = False
-
-    filtered_lines = []
-
-    if filter:
-        for i in range(len(lines)):
-            if line_flags[i]:
-                filtered_lines.append(lines[i])
-
-    else:
-        filtered_lines = lines
-
-    return filtered_lines
-
-
-def intersection(line1, line2):
-    rho1, theta1 = line1[0]
-    rho2, theta2 = line2[0]
-    A = np.array([
-        [np.cos(theta1), np.sin(theta1)],
-        [np.cos(theta2), np.sin(theta2)]
-    ])
-    b = np.array([[rho1], [rho2]])
-    x0, y0 = np.linalg.solve(A, b)
-    x0, y0 = int(np.round(x0)), int(np.round(y0))
-    return x0, y0
-
-
-def segmented_intersections(lines):
-    intersections = []
-    for i, group in enumerate(lines[:-1]):
-        for next_group in lines[i+1:]:
-            for line1 in group:
-                for line2 in next_group:
-                    intersections.append(intersection(line1, line2))
-
-    return intersections
-
-
-def process(image):
-
+    # TODO : Use hough lines to create mask and remove
+    #        lines of thresh image before getting numbers
     global grid_mapping
 
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 90, 150, apertureSize=3)
-    kernel = np.ones((3, 3), np.uint8)
-    edges = cv2.dilate(edges, kernel, iterations=1)
-    kernel = np.ones((5, 5), np.uint8)
-    edges = cv2.erode(edges, kernel, iterations=1)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 275,
-                            minLineLength=600, maxLineGap=100)[0].tolist()
+    cv2.imshow('gray', gray)
 
-    print(lines)
+    thresh = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 57, 5)
 
-    for x1, y1, x2, y2 in lines:
-        for index, (x3, y3, x4, y4) in enumerate(lines):
+    y, x, _ = img.shape
+    w_cell = x // 9
+    h_cell = y // 9
+    rect_cells = []
 
-            if y1 == y2 and y3 == y4:
-                diff = abs(y1-y3)
-            elif x1 == x2 and x3 == x4:
-                diff = abs(x1-x3)
-            else:
-                diff = 0
+    cv2.imshow('thresh', thresh)
+    index = 0
 
-            if diff < 10 and diff is not 0:
-                del lines[index]
+    mask = thresh.copy()
+    mask[:] = 255
 
-    gridsize = (len(lines) - 2) / q2
-    print(gridsize)
-    return image
+    for i in range(10):
+        cv2.line(mask, (int(i*w_cell), 0), (int(i*w_cell), y), (0, 0, 0), 3)
+        cv2.line(mask, (0, int(i*h_cell)), (x, int(i*h_cell)), (0, 0, 0), 3)
+
+    thresh = thresh & mask
+
+    for i in range(10):
+        for j in range(10):
+            x1, x2 = int(i*w_cell+2), int(i*w_cell-2)+w_cell
+            y1, y2 = int(j*h_cell+2), int(j*h_cell-2)+h_cell
+
+            index += 1
+
+            # if np.mean(cell) > 10:
+            #     number = predict(cell)
+
+            #     cv2.putText(img, str(number), (x1, y2),
+            #                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
+
+        # xl = 0+int(i*w_cell)
+        # y1, y2 = 0, y
+    cv2.imshow('mask', thresh)
+    return img
 
 
 def get_sudoku(image):
