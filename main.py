@@ -10,13 +10,19 @@ while True:
     # obter ROI contendo SUDOKU
     roi, roi_found = get_roi(img)
 
-    if roi_found:
-        # Rotationa a imagem baseado no ângulo das linhas
-        rotated = adjust_rotation(roi)
+    if roi.any() and roi_found:
+        try:
+            # Rotaciona a imagem baseado no ângulo das linhas
+            rotated = adjust_rotation(roi)
+            # Busca novo ROI removendo as bordas contidas na rotação
+            roi, found_roi = get_roi(rotated)
 
-        # Busca novo ROI removendo as bordas contidas na rotação
-        roi, found_roi = get_roi(rotated)
+            if found_roi:
+                cells = get_cells(roi)
 
+                cv2.imshow('cells', cells)
+        except Exception as e:
+            print(e)
         """
         Obter o sudoku
         """
