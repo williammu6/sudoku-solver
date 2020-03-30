@@ -32,6 +32,7 @@ def get_roi(img):
                 max_area = area
                 best_cnt = i
 
+    z = 10
     if best_cnt.any():
         cv2.drawContours(mask, [best_cnt], 0, 255, -1)
         cv2.drawContours(mask, [best_cnt], 0, 0, 2)
@@ -41,7 +42,7 @@ def get_roi(img):
         if len(contours) == 1:
             area = cv2.contourArea(contours[0])
             (x, y, w, h) = cv2.boundingRect(contours[0])
-            roi = img[y:y+h, x:x+w]
+            roi = img[y-z:y+h+z, x-z:x+w+z]
             return roi, True
     return img, False
 
@@ -87,32 +88,6 @@ def adjust_rotation(img):
     if not math.isnan(final_angle):
         img = ndimage.rotate(img, final_angle)
 
-    return img
-
-
-def get_grid(img):
-
-    global grid_mapping
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    cv2.imshow('gray', gray)
-
-    thresh = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 57, 5)
-
-    y, x, _ = img.shape
-    w_cell = x // 9
-    h_cell = y // 9
-    rect_cells = []
-
-    cv2.imshow('thresh', thresh)
-    index = 0
-
-    mask = get_lines(img)
-
-    if mask is not None:
-        cv2.imshow('mask', mask)
     return img
 
 
