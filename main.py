@@ -7,17 +7,14 @@ cap = cv2.VideoCapture(0)
 while True:
     _, img = cap.read()
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     # obter ROI contendo SUDOKU
-    roi, roi_found = get_roi(gray)
+    roi, roi_found = get_roi(img)
 
     if roi_found:
         # Rotationa a imagem baseado no ângulo das linhas
         rotated = adjust_rotation(roi)
 
         # Busca novo ROI removendo as bordas contidas na rotação
-
         roi, found_roi = get_roi(rotated)
 
         """
