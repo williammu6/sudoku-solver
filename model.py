@@ -11,6 +11,9 @@ from constants import *
 
 MODEL = './knn_model.pkl'
 
+def load_model():
+    knn = joblib.load(MODEL)
+    return knn
 
 def get_features(image):
     return hog(image, orientations=8, pixels_per_cell=(3, 3), cells_per_block=(4, 4))
@@ -33,17 +36,16 @@ def train():
     joblib.dump(knn, MODEL)
 
 
-def predict(image):
-    knn = joblib.load(MODEL)
+def predict(knn, image):
     image = cv2.resize(image, IMG_SIZE)
     features = get_features(image)
     predict = knn.predict(features.reshape(1, -1))[0]
-    proba = knn.predict_proba(features.reshape(1, -1))
+    # proba = knn.predict_proba(features.reshape(1, -1))
     # cv2.imshow('predict', image)
     # print(f'GOT {predict}')
     # cv2.waitKey(0)
     # if np.argmax(proba) <= 0.6:
-    #     return 0
+    #     return -1
     return predict
 
 

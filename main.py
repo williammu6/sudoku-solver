@@ -9,7 +9,8 @@ def build_sudoku(cells):
     sudoku = np.zeros((9, 9), dtype=np.int8)
 
     for k in cells.keys():
-        sudoku[k % 9][k // 9] = cells[k]['prediction']
+        if cells[k].get('prediction'):
+            sudoku[k // 9][k % 9] = cells[k]['prediction']
 
     print(sudoku)
 
@@ -22,21 +23,20 @@ def start():
         roi, roi_found = get_roi(img)
 
         if roi.any() and roi_found:
-        #     try:
             # Rotaciona a imagem baseado no ângulo das linhas
             rotated = adjust_rotation(roi)
             # Busca novo ROI removendo as bordas contidas na rotação
             roi, found_roi = get_roi(rotated)
 
             if found_roi:
-                try:
-                    img, cells = get_cells(roi)
-                except:
-                    print(roi.shape)
+                # try:
+                img, cells = get_cells(roi)
+                sudoku = build_sudoku(cells)
+                # except Exception as e:
+                #     print(e)
 
                 # cv2.imshow('cells', img)
 
-                # sudoku = build_sudoku(cells)
 
                     
             # except Exception as e:

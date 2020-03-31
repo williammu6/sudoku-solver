@@ -3,9 +3,7 @@ import math
 import numpy as np
 from scipy import ndimage
 from imutils import contours
-from model import predict
-from collections import defaultdict
-from functools import cmp_to_key
+from model import predict, load_model
 import operator
 import threading
 
@@ -13,22 +11,6 @@ import threading
 from sudoku_solver import Solver
 
 cells = {}
-
-
-def pre_process_image(img):
-    proc = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-    proc = cv2.adaptiveThreshold(
-        proc, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-
-    proc = cv2.bitwise_not(proc, proc)
-
-    for _ in range(3):
-        proc = cv2.erode(proc, (3, 3), -1)
-        proc = cv2.dilate(proc, (3, 3), -1)
-
-    return proc
-
 
 
 def denoise(img):
@@ -46,6 +28,9 @@ def denoise(img):
     return out
 
 def get_cells(img):
+
+    knn = load_model()
+
     cells = {}
 
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -64,7 +49,7 @@ def get_cells(img):
         return img
 
     rho_threshold = 25
-    theta_threshold = 0.5
+    theta_threshold = 0.7
 
     similar_lines = {i: [] for i in range(len(lines))}
     for i in range(len(lines)):
@@ -134,9 +119,9 @@ def get_cells(img):
     z = 1
 
     cIndex = 0
-    
-    # contours = contours[:81]
 
+    margin = 3
+    
     for c in contours:
         area = cv2.contourArea(c)
         
@@ -144,16 +129,15 @@ def get_cells(img):
 
         if area > 200 and area < 2000 and abs(w-h) < 10:
             
-            cell = thresh[y:y+h, x:x+w]
+            cell = thresh[y+margin:y+h-margin, x+margin:x+w-margin]
 
             cells[cIndex] = {
                 'point': (x, y)
             }
 
             color = (0, 255, 0)
-
-            if np.mean(cell) > 100:
-                # cells[cIndex]['prediction'] = predict(cell)
+            if np.mean(cell) > 14:
+                cells[cIndex]['prediction'] = predict(knn, cell)
                 color = (255, 0, 255)
     
             cv2.rectangle(img, (x+z, y+z), (x+w-z, y+h-z), color, 2)
