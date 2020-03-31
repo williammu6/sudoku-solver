@@ -11,6 +11,6 @@ Resolver um Sudoku em imagem obtida através de Webcam e plotar os resultados na
 ## TODO
 - [] Escrever como usar
 - [x] Obter ROI independentemente do ângulo em que o SUDOKU esteja na imagem
-- [] Remover linhas do SUDOKU utilizando máscara obtida com Hough Lines (?)
-- [] Extrair coordenadas de cada célula do sudoku
+- [x] Extrair coordenadas de cada célula do sudoku
 - [] Células que contenham números: utilizar o modelo treinado para classificar qual número é
+- [] Utilizar threads para diminuir delays

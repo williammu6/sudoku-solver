@@ -7,7 +7,8 @@ from model import predict
 from collections import defaultdict
 from functools import cmp_to_key
 import operator
-import maxflow
+import threading
+
 
 from sudoku_solver import Solver
 
@@ -33,7 +34,8 @@ def pre_process_image(img):
 def denoise(img):
     thresh = cv2.adaptiveThreshold(img, 255, 1, 1, 11, 2)
 
-    blur = cv2.GaussianBlur(img, (5, 5), -1)
+    blur = cv2.GaussianBlur(img, (11, 11), -1)
+
     thresh_blur = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
 
     out = thresh & thresh_blur
@@ -44,6 +46,8 @@ def denoise(img):
     return out
 
 def get_cells(img):
+    cells = {}
+
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     
     thresh = denoise(gray)
@@ -53,13 +57,9 @@ def get_cells(img):
     
     cv2.imshow('thresh', thresh)
 
-    t_copy = cv2.dilate(thresh.copy(), (3, 3), -1)
-    t_copy = cv2.dilate(t_copy, (3, 3), -1)
+    lines = cv2.HoughLines(thresh, 1, np.pi/180, 150)
 
-    cv2.imshow('c', t_copy)
-    lines = cv2.HoughLines(t_copy, 1, np.pi/180, 150)
-
-    thresh = 255 - thresh
+    thresh = thresh
     if lines is None or len(lines) > 3000:
         return img
 
@@ -124,33 +124,45 @@ def get_cells(img):
 
         if abs(angle) < 5 or abs(angle) > 45:
             real_lines.append(line)
-            cv2.line(mask, (x1, y1), (x2, y2), (255, 255, 255), 2)
+            cv2.line(mask, (x1, y1), (x2, y2), (255, 255, 255), 5)
 
     mask = cv2.erode(mask, (3, 3), -1)
+
+    cv2.imshow('mask', mask)
 
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     z = 1
 
     cIndex = 0
+    
+    # contours = contours[:81]
+
     for c in contours:
         area = cv2.contourArea(c)
+        
         (x, y, w, h) = cv2.boundingRect(c)
-        if area > 300 and area < 1000 and abs(w-h) < 10:
-            cv2.rectangle(img, (x+z, y+z), (x+w-z, y+h-z), (0, 255, 0), 1)
-            # cell = thresh[y:y+h, x:x+w]
 
-            # print(np.mean(cell))
-            # cv2.imshow('f', cell)
-            # if np.mean(cell) < 150:
-            #     number = predict(cell)
-            #     print(number)
-            # cells[cIndex] = {
-            #     'point': (x, y)
-            # }
+        if area > 200 and area < 2000 and abs(w-h) < 10:
+            
+            cell = thresh[y:y+h, x:x+w]
 
-            # cIndex += 1
+            cells[cIndex] = {
+                'point': (x, y)
+            }
 
-    return img
+            color = (0, 255, 0)
+
+            if np.mean(cell) > 100:
+                # cells[cIndex]['prediction'] = predict(cell)
+                color = (255, 0, 255)
+    
+            cv2.rectangle(img, (x+z, y+z), (x+w-z, y+h-z), color, 2)
+            # number = predict(cell)
+            # cells[cIndex]['prediction'] = number
+
+            cIndex += 1
+
+    return img, cells
 
 
 def get_roi(img):
@@ -182,7 +194,7 @@ def get_roi(img):
             area = cv2.contourArea(contours[0])
             (x, y, w, h) = cv2.boundingRect(contours[0])
             roi = img[y-z:y+h+z, x-z:x+w+z]
-            if roi.any():
+            if area > 80000 and roi.any():
                 return roi, True
     return img, False
 

@@ -42,8 +42,8 @@ def predict(image):
     # cv2.imshow('predict', image)
     # print(f'GOT {predict}')
     # cv2.waitKey(0)
-    if np.argmax(proba) <= 0.6:
-        return 0
+    # if np.argmax(proba) <= 0.6:
+    #     return 0
     return predict
 
 
